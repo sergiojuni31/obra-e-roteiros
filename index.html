@@ -70,6 +70,11 @@ h2,h3{margin:14px 0 6px}
 #zoom img{max-width:96vw;max-height:96vh}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--c);padding:8px 14px;border-radius:6px;display:none;z-index:30}
 a{color:var(--c)}
+.row>.selbox,.selbox{flex:0 0 34px;display:flex;align-items:center;justify-content:center;min-height:34px;margin:-6px 2px -6px -6px;cursor:pointer}
+.selbox input{width:18px;height:18px;padding:0;accent-color:#FF5A1F;cursor:pointer}
+.card.marcado{border-color:var(--q)}
+#barra-sel{position:sticky;top:46px;z-index:4;display:none;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--q);border-radius:8px;padding:8px 10px;margin:8px 0;font-family:var(--mono);font-size:13px}
+#barra-sel span{margin-right:auto;color:var(--q)}
 </style>
 </head>
 <body>
@@ -234,7 +239,7 @@ const pendSalvar=new Map();
 function salvarDepois(item){clearTimeout(pendSalvar.get(item.id)?.t);pendSalvar.set(item.id,{item,t:setTimeout(()=>{pendSalvar.delete(item.id);salvar(item);},500)});}
 function salvarPendentes(){for(const [,p] of pendSalvar){clearTimeout(p.t);salvar(p.item);}pendSalvar.clear();}
 async function apagar(item){item.apagado=true;await salvar(item);}
-async function itensAtivos(tipo){return (await DB.all('itens')).filter(i=>!i.apagado&&(!tipo||i.tipo===tipo));}
+async function itensAtivos(tipo){return (await DB.all('itens')).map(normalizar).filter(i=>i&&!i.apagado&&(!tipo||i.tipo===tipo));}
 async function listaPilares(){return [...new Set((await itensAtivos()).map(i=>i.pilar).filter(Boolean))].sort();}
 
 function novaIdeia(base={}){const t=agora();return {id:uuid(),tipo:'ideia',titulo:'',nota:'',links:[],prints:[],pilar:'',tags:[],origem:'própria',status:'nova',origem_id:null,projeto_id:null,criado_em:t,atualizado_em:t,apagado:false,...base};}
@@ -329,10 +334,50 @@ async function render(){
  return telaIdeias();
 }
 
+// ================= NORMALIZAÇÃO, EXCLUSÃO E SELEÇÃO =================
+function normalizar(i){
+ if(!i||typeof i!=='object')return i;
+ const base=i.tipo==='projeto'?novoProjeto():novaIdeia();
+ for(const [k,v] of Object.entries(base)){
+  if(i[k]===undefined)i[k]=v;
+  else if(Array.isArray(v)&&!Array.isArray(i[k]))i[k]=v;
+  else if(v&&typeof v==='object'&&!Array.isArray(v)&&(typeof i[k]!=='object'||i[k]===null))i[k]=v;
+ }
+ return i;
+}
+async function excluirItem(it){
+ await apagar(it);
+ if(it.tipo==='projeto'&&it.ideia_id){
+  const ideia=normalizar(await DB.get('itens',it.ideia_id));
+  if(ideia&&!ideia.apagado&&ideia.projeto_id===it.id){ideia.projeto_id=null;ideia.status='analisando';await salvar(ideia);}
+ }
+}
+const caixaSel=id=>`<label class="selbox" onclick="event.stopPropagation()" title="Selecionar"><input type="checkbox" data-sel="${id}"></label>`;
+function ativarSelecao(visiveis,rotulo,recarregar){
+ const sel=new Set(),barra=$('#barra-sel');
+ const atualizar=()=>{
+  const ids=visiveis().map(i=>i.id);
+  for(const id of [...sel])if(!ids.includes(id))sel.delete(id);
+  document.querySelectorAll('[data-sel]').forEach(c=>{c.checked=sel.has(c.dataset.sel);c.closest('.card')?.classList.toggle('marcado',c.checked);});
+  barra.innerHTML=sel.size?`<span>${sel.size} selecionado(s)</span><button class="mini fix" data-a="selTodos">Selecionar todos (${ids.length})</button><button class="mini q fix" data-a="selApagar">🗑 Apagar</button><button class="mini fix" data-a="selLimpar">Cancelar</button>`:'';
+  barra.style.display=sel.size?'flex':'none';
+ };
+ $('#lista').addEventListener('change',e=>{const id=e.target.dataset?.sel;if(!id)return;e.target.checked?sel.add(id):sel.delete(id);atualizar();});
+ acoes.selTodos=()=>{visiveis().forEach(i=>sel.add(i.id));atualizar();};
+ acoes.selLimpar=()=>{sel.clear();atualizar();};
+ acoes.selApagar=async()=>{
+  const itens=visiveis().filter(i=>sel.has(i.id));if(!itens.length)return;
+  if(!confirm(`Apagar ${itens.length} ${rotulo}? A exclusão também vai para os outros aparelhos.`))return;
+  for(const it of itens)await excluirItem(it);
+  toast(`${itens.length} apagado(s)`);recarregar();
+ };
+ return atualizar;
+}
+
 // ================= TELA: IDEIAS =================
 const filtros={ideias:{q:'',pilar:'',status:'',origem:''},projetos:{q:'',pilar:'',status:'',etapa:'',ate:''}};
-const tagsIdeia=i=>`<span class="tag ${COR_STATUS[i.status]||''}">${esc(i.status)}</span>${i.pilar?`<span class="tag">${esc(i.pilar)}</span>`:''}<span class="tag">${esc(i.origem)}</span>${i.links.length?`<span class="tag">links ${i.links.length}</span>`:''}${i.prints.length?`<span class="tag">prints ${i.prints.length}</span>`:''}${(i.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}`;
-const cardIdeia=i=>`<div class="card click" onclick="location.hash='#ideia/${i.id}'"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${i.prints[0]?`<img data-anexo="${i.prints[0].anexo}" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:4px;flex:none;pointer-events:none">`:''}<div style="flex:1"><b>${esc(i.titulo)}</b><div>${tagsIdeia(i)}</div>${i.nota?`<div class="muted">${esc(i.nota.slice(0,140))}</div>`:''}</div></div></div>`;
+const tagsIdeia=i=>`<span class="tag ${COR_STATUS[i.status]||''}">${esc(i.status)}</span>${i.pilar?`<span class="tag">${esc(i.pilar)}</span>`:''}<span class="tag">${esc(i.origem)}</span>${i.links.length?`<span class="tag">links ${i.links.length}</span>`:''}${i.prints.length?`<span class="tag">prints ${i.prints.length}</span>`:''}${i.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}`;
+const cardIdeia=i=>`<div class="card click" onclick="location.hash='#ideia/${i.id}'"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${caixaSel(i.id)}${i.prints[0]?`<img data-anexo="${i.prints[0].anexo}" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:4px;flex:none;pointer-events:none">`:''}<div style="flex:1;min-width:0"><b>${esc(i.titulo||'(sem título)')}</b><div>${tagsIdeia(i)}</div>${i.nota?`<div class="muted">${esc(i.nota.slice(0,140))}</div>`:''}</div></div></div>`;
 
 async function capturar(texto,arquivos=[]){
  texto=(texto||'').trim();if(!texto&&!arquivos.length)return;
@@ -348,17 +393,23 @@ async function telaIdeias(){
  $('#app').innerHTML=`<div class="card"><div class="row"><input id="cap" placeholder="Anotar ideia ou colar link… (Enter)" autocomplete="off" style="flex:5 1 200px"><button class="pri fix" data-a="cap">Salvar</button><button class="fix" data-a="capFoto" title="Câmera ou galeria">📷</button></div>
  <div class="muted" style="margin-top:6px">No PC: Ctrl+V com um print cria uma ideia na hora. Arrastar imagens também funciona.</div></div>
  <div class="row"><input id="f-q" placeholder="Buscar em tudo…" value="${esc(f.q)}" style="flex:3 1 180px">${sel('f-pilar',pil,f.pilar,'Pilar: todos')}${sel('f-status',STATUS_IDEIA,f.status,'Status: ativas')}${sel('f-origem',ORIGENS,f.origem,'Origem: todas')}</div>
- <div id="lista"></div>`;
- const desenhar=()=>{const q=norm(f.q);
-  const l=todas.filter(i=>(!q||norm(JSON.stringify(i)).includes(q))&&(!f.pilar||i.pilar===f.pilar)&&(f.status?i.status===f.status:!['virou projeto','descartada'].includes(i.status))&&(!f.origem||i.origem===f.origem));
-  $('#lista').innerHTML=l.length?l.map(cardIdeia).join(''):'<p class="muted">Nenhuma ideia aqui.</p>';hidratar($('#lista'));};
- for(const k of ['q','pilar','status','origem'])$('#f-'+k).addEventListener('input',e=>{f[k]=e.target.value;desenhar();});
- desenhar();
+ <div id="barra-sel"></div><div id="lista"></div>`;
+ // captura configurada ANTES da lista: um item com problema não trava mais o Salvar
  const cap=$('#cap');
+ const salvarCap=async fs=>{try{await capturar(cap.value,fs);telaIdeias();}catch(e){console.error(e);alert('Erro ao salvar: '+e.message);}};
  cap.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();acoes.cap();}});
- acoes.cap=async()=>{const t=cap.value;if(!t.trim())return cap.focus();await capturar(t);telaIdeias();};
- acoes.capFoto=()=>escolherImagens(async fs=>{await capturar(cap.value,fs);telaIdeias();});
- aoColarImagens=async fs=>{await capturar(cap.value,fs);telaIdeias();};
+ acoes.cap=()=>cap.value.trim()?salvarCap([]):cap.focus();
+ acoes.capFoto=()=>escolherImagens(salvarCap);
+ aoColarImagens=salvarCap;
+
+ let visiveis=[],atualizarSel=()=>{};
+ const desenhar=()=>{const q=norm(f.q);
+  visiveis=todas.filter(i=>(!q||norm(JSON.stringify(i)).includes(q))&&(!f.pilar||i.pilar===f.pilar)&&(f.status?i.status===f.status:!['virou projeto','descartada'].includes(i.status))&&(!f.origem||i.origem===f.origem));
+  $('#lista').innerHTML=visiveis.length?visiveis.map(i=>{try{return cardIdeia(i);}catch(e){console.error('[ideia]',i.id,e);return '';}}).join(''):'<p class="muted">Nenhuma ideia aqui.</p>';
+  hidratar($('#lista'));atualizarSel();};
+ for(const k of ['q','pilar','status','origem'])$('#f-'+k).addEventListener('input',e=>{f[k]=e.target.value;desenhar();});
+ atualizarSel=ativarSelecao(()=>visiveis,'ideia(s)',telaIdeias);
+ desenhar();
 }
 
 // ================= TELA: IDEIA =================
@@ -381,7 +432,7 @@ async function virarProjeto(ideia){
  aba='resumo';location.hash='#projeto/'+p.id;
 }
 async function telaIdeia(id){
- const i=await DB.get('itens',id);
+ const i=normalizar(await DB.get('itens',id));
  if(!i||i.apagado||i.tipo!=='ideia'){$('#app').innerHTML='<p class="muted">Ideia não encontrada. <a href="#ideias">Voltar</a></p>';return;}
  editando=i;const pil=await listaPilares();
  $('#app').innerHTML=`<a href="#ideias" class="muted">← Ideias</a>
@@ -392,11 +443,11 @@ async function telaIdeia(id){
  <div class="lbl">Prints</div><div id="prints"></div>
  <div class="row" style="margin-top:6px"><button class="fix" data-a="addPrint">📷 Adicionar imagem</button><span class="muted">ou Ctrl+V / arrastar</span></div>
  <div class="row"><div><div class="lbl">Pilar</div><input data-k="pilar" list="dl-pilares" value="${esc(i.pilar)}"></div>
- <div><div class="lbl">Tags (separadas por vírgula)</div><input data-k="tags" data-t="csv" value="${esc((i.tags||[]).join(', '))}"></div></div>
+ <div><div class="lbl">Tags (separadas por vírgula)</div><input data-k="tags" data-t="csv" value="${esc(i.tags.join(', '))}"></div></div>
  <div class="row"><div><div class="lbl">Origem</div>${selK('origem',ORIGENS,i.origem)}</div><div><div class="lbl">Status</div>${selK('status',STATUS_IDEIA,i.status)}</div></div>
  ${i.origem_id?`<div class="lbl">ID de origem</div><div class="muted" style="font-family:var(--mono)">${esc(i.origem_id)}</div>`:''}
  <datalist id="dl-pilares">${pil.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
- <div class="row" style="margin-top:16px">${i.projeto_id?`<a class="btn fix" href="#projeto/${i.projeto_id}">Abrir projeto →</a>`:`<button class="pri fix" data-a="virar">Transformar em projeto</button>`}<button class="q fix" data-a="excluir">Excluir ideia</button></div>
+ <div class="row" style="margin-top:16px">${i.projeto_id?`<a class="btn fix" href="#projeto/${i.projeto_id}">Abrir projeto →</a>`:`<button class="pri fix" data-a="virar">Transformar em projeto</button>`}<button class="q fix" data-a="excluir">🗑 Excluir ideia</button></div>
  <p class="muted">Tudo é salvo automaticamente.</p>`;
  const desenharPrints=()=>{$('#prints').innerHTML=htmlThumbs(i.prints,'prints');hidratar($('#prints'));};
  desenharPrints();
@@ -404,8 +455,35 @@ async function telaIdeia(id){
  acoes.addPrint=()=>escolherImagens(addImgs);aoColarImagens=addImgs;
  acoes.rmImg=el=>{if(!confirm('Remover esta imagem?'))return;i.prints.splice(+el.dataset.i,1);salvar(i);desenharPrints();};
  acoes.virar=()=>virarProjeto(i);
- acoes.excluir=async()=>{if(!confirm('Excluir esta ideia?'))return;await apagar(i);location.hash='#ideias';};
+ acoes.excluir=async()=>{if(!confirm('Excluir esta ideia?'))return;await excluirItem(i);location.hash='#ideias';};
  posAlteracao=k=>{if(k==='links')$('#links-abrir').innerHTML=linksHtml(i.links);};
+}
+
+// ================= TELA: PROJETOS =================
+function prazoTag(p,c){if(!p.data_alvo||!c.atual)return '';const d=diasAte(p.data_alvo);
+ return `<span class="tag ${d<=7||p.tipo_video==='tendência'?'q':''}">${fmtData(p.data_alvo)} · ${textoPrazo(d)}</span>`;}
+function cardProjeto(p){const c=calc(p);
+ return `<div class="card click" onclick="location.hash='#projeto/${p.id}'"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${caixaSel(p.id)}<div style="flex:1;min-width:0"><b>${esc(p.titulo||'(sem título)')}</b>
+ <div>${p.pilar?`<span class="tag">${esc(p.pilar)}</span>`:''}<span class="tag">${esc(p.tipo_video)}</span>${prazoTag(p,c)}${c.pul?`<span class="tag q">${c.pul} pulado(s)</span>`:''}</div>
+ <div class="bar"><div style="width:${c.pct}%"></div></div>
+ <div class="muted" style="font-family:var(--mono)">${c.pct}% · ${c.atual?`<span style="color:var(--q)">${c.atual.n}. ${esc(c.atual.nome)}</span>`:'<span style="color:var(--c)">concluído</span>'}</div></div></div></div>`;}
+async function telaProjetos(){
+ const todos=(await itensAtivos('projeto')).sort((a,b)=>(a.data_alvo||'9999').localeCompare(b.data_alvo||'9999')||(b.atualizado_em||'').localeCompare(a.atualizado_em||''));
+ const pil=await listaPilares(),f=filtros.projetos;
+ $('#app').innerHTML=`<div class="row"><button class="pri fix" data-a="novo">+ Novo projeto</button></div>
+ <div class="row" style="margin-top:8px"><input id="f-q" placeholder="Buscar em tudo…" value="${esc(f.q)}" style="flex:3 1 180px">${sel('f-pilar',pil,f.pilar,'Pilar: todos')}${sel('f-status',['em andamento','concluído'],f.status,'Status: todos')}${sel('f-etapa',ETAPAS.map((e,i)=>`${i+1}. ${e[0]}`),f.etapa,'Etapa atual: todas')}
+ <label class="muted">Data-alvo até<input type="date" id="f-ate" value="${esc(f.ate)}"></label></div>
+ <div id="barra-sel"></div><div id="lista"></div>`;
+ acoes.novo=async()=>{const p=novoProjeto();await salvar(p);aba='resumo';location.hash='#projeto/'+p.id;};
+ let visiveis=[],atualizarSel=()=>{};
+ const desenhar=()=>{const q=norm(f.q);
+  visiveis=todos.filter(p=>{try{const c=calc(p);const et=c.atual?`${c.atual.n}. ${c.atual.nome}`:'';
+   return (!q||norm(JSON.stringify(p)).includes(q))&&(!f.pilar||p.pilar===f.pilar)&&(!f.status||(f.status==='concluído')===!c.atual)&&(!f.etapa||et===f.etapa)&&(!f.ate||(p.data_alvo&&p.data_alvo<=f.ate));}catch{return true;}});
+  $('#lista').innerHTML=visiveis.length?visiveis.map(p=>{try{return cardProjeto(p);}catch(e){console.error('[projeto]',p.id,e);return '';}}).join(''):'<p class="muted">Nenhum projeto aqui.</p>';
+  atualizarSel();};
+ for(const k of ['q','pilar','status','etapa','ate'])$('#f-'+k).addEventListener('input',e=>{f[k]=e.target.value;desenhar();});
+ atualizarSel=ativarSelecao(()=>visiveis,'projeto(s)',telaProjetos);
+ desenhar();
 }
 
 // ================= TELA: PROJETOS =================
@@ -460,7 +538,7 @@ function htmlAba(p){
  }
 }
 async function telaProjeto(id){
- const p=await DB.get('itens',id);
+ const p=normalizar(await DB.get('itens',id));
  if(!p||p.apagado||p.tipo!=='projeto'){$('#app').innerHTML='<p class="muted">Projeto não encontrado. <a href="#projetos">Voltar</a></p>';return;}
  editando=p;const pil=await listaPilares();
  $('#app').innerHTML=`<a href="#projetos" class="muted">← Projetos</a><div id="cab"></div><div class="tabs" id="tabs"></div><div id="sec"></div><datalist id="dl-pilares">${pil.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
@@ -494,7 +572,7 @@ async function telaProjeto(id){
  acoes.imgMini=el=>escolherImagens(async fs=>{const [id]=await anexosDe(fs.slice(0,1));if(!id)return;p.miniaturas[+el.dataset.i].anexo=id;await salvar(p);desenharSec();},false);
  acoes.exportar=()=>{salvarPendentes();exportarAgente([p],`projeto-${slug(p.titulo)}.json`);};
  acoes.copiar=async()=>{salvarPendentes();try{await navigator.clipboard.writeText(JSON.stringify(jsonAgente([p]),null,2));toast('JSON copiado');}catch{alert('Não consegui copiar. Use "Baixar JSON".');}};
- acoes.excluir=async()=>{if(!confirm('Excluir este projeto?'))return;await apagar(p);location.hash='#projetos';};
+ acoes.excluir=async()=>{if(!confirm('Excluir este projeto?'))return;await excluirItem(p);location.hash='#projetos';};
  posAlteracao=k=>{if(k==='formato'){aplicarFormato(p);if(aba==='checklist')desenharSec();}
   if(['titulo','pilar','tipo_video','formato','data_alvo'].includes(k))desenharCab();
   if(k.endsWith('.duracao')&&$('#dur'))$('#dur').textContent=txtDuracao(p);};
