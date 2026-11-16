@@ -675,6 +675,7 @@ $('#sync-status').addEventListener('click',()=>Sync.sincronizar());
 navigator.storage?.persist?.();
 render();
 Sync.iniciar();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW',e));
 </script>
 </body>
 </html>
