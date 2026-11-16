@@ -362,14 +362,22 @@ async function telaIdeias(){
 }
 
 // ================= TELA: IDEIA =================
-async function virarProjeto(ideia){
- salvarPendentes();
+async function criarProjetoDeIdeia(ideia){
+ const pt=ideia.pauta||{};
  const p=novoProjeto({titulo:ideia.titulo,pilar:ideia.pilar,ideia_id:ideia.id,origem_id:ideia.origem_id,
-  tipo_video:ideia.origem==='tendência'?'tendência':'perene',
+  tipo_video:['perene','sazonal','tendência'].includes(pt.tipo)?pt.tipo:(ideia.origem==='tendência'?'tendência':'perene'),
+  formato:pt.formato==='sem experimento'?'sem experimento':'com experimento',
+  data_alvo:pt.data_alvo||'',
   fontes:ideia.links.map(l=>({id:uuid(),link:l,descricao:'',confiabilidade:'',confirmada:false})),
   galeria:ideia.prints.map(x=>({...x})),
-  diario:[{data:hoje(),texto:'Projeto criado a partir da ideia.'+(ideia.nota?'\nNota original: '+ideia.nota:'')}]});
+  diario:[{data:hoje(),texto:'Projeto criado a partir da '+(pt.id?`pauta ${pt.id} do plano de ação${pt.fase?' ('+pt.fase+')':''}`:'ideia')+'.'+(ideia.nota?'\nNota original: '+ideia.nota:'')}]});
+ aplicarFormato(p);
  await salvar(p);ideia.status='virou projeto';ideia.projeto_id=p.id;await salvar(ideia);
+ return p;
+}
+async function virarProjeto(ideia){
+ salvarPendentes();
+ const p=await criarProjetoDeIdeia(ideia);
  aba='resumo';location.hash='#projeto/'+p.id;
 }
 async function telaIdeia(id){
@@ -536,6 +544,40 @@ async function importarExterno(j,tipo){
  return n;
 }
 
+// ================= IMPORTAÇÃO DO PLANO DE AÇÃO =================
+function pautasDoJSON(j){
+ if(Array.isArray(j))return j;
+ if(Array.isArray(j.pautas))return j.pautas;
+ if(j&&j.id&&j.titulo)return [j];
+ throw new Error('Não encontrei a lista "pautas" neste JSON.');
+}
+function ideiaDePauta(pt){
+ const st={ideia:'nova',descartada:'descartada'}[pt.status]||'analisando';
+ return novaIdeia({titulo:pt.titulo||'(sem título)',nota:pt.notas||'',links:pt.url?[pt.url]:[],pilar:pt.pilar||'',
+  origem:ORIGENS.includes(pt.origem)?pt.origem:'própria',status:st,origem_id:'pauta:'+pt.id,
+  tags:['pauta',pt.fase].filter(Boolean),
+  pauta:{id:pt.id,tipo:pt.tipo||null,formato:pt.formato||null,data_alvo:pt.data_alvo||null,fase:pt.fase||null,status:pt.status||null}});
+}
+async function previaPlano(j){
+ const pautas=pautasDoJSON(j),fa=j.fase_atual||null;
+ const existentes=new Set((await DB.all('itens')).filter(i=>!i.apagado).map(i=>i.origem_id).filter(Boolean));
+ const box=$('#imp-prev');
+ box.innerHTML=`<div class="card"><div class="lbl">Pautas encontradas: ${pautas.length}${fa?` · fase atual: ${esc(fa)}`:''}</div>
+ ${pautas.map((pt,i)=>{const ja=existentes.has('pauta:'+pt.id);
+  return `<label class="item" style="cursor:pointer"><input type="checkbox" data-i="${i}" ${ja?'disabled':(fa&&pt.fase===fa?'checked':'')} style="width:auto;flex:none">
+  <span class="t">${esc(pt.titulo)}<br><span class="tag">${esc(pt.id)}</span>${pt.pilar?`<span class="tag">${esc(pt.pilar)}</span>`:''}${pt.tipo?`<span class="tag ${pt.tipo==='tendência'?'q':''}">${esc(pt.tipo)}</span>`:''}${pt.formato?`<span class="tag">${esc(pt.formato)}</span>`:''}${pt.fase?`<span class="tag">${esc(pt.fase)}</span>`:''}${pt.data_alvo?`<span class="tag">${fmtData(pt.data_alvo)}</span>`:''}${ja?'<span class="tag c">já importada</span>':''}</span></label>`;}).join('')}
+ <div class="row" style="margin-top:8px"><button class="fix" data-a="impPlano" data-v="ideia">Importar como ideias</button><button class="pri fix" data-a="impPlano" data-v="projeto">Importar como projetos</button><button class="fix" data-a="impCancelar">Cancelar</button></div></div>`;
+ acoes.impPlano=async el=>{
+  const marcadas=[...box.querySelectorAll('input[type=checkbox]:checked')].map(c=>pautas[+c.dataset.i]);
+  if(!marcadas.length)return alert('Marque ao menos uma pauta.');
+  for(const pt of marcadas){const ideia=ideiaDePauta(pt);
+   if(el.dataset.v==='projeto')await criarProjetoDeIdeia(ideia);else await salvar(ideia);}
+  toast(`${marcadas.length} pauta(s) importada(s) como ${el.dataset.v==='projeto'?'projetos':'ideias'}`);
+  box.innerHTML='';$('#imp-txt').value='';
+ };
+ acoes.impCancelar=()=>{box.innerHTML='';};
+}
+
 // ================= TELA: CONFIGURAÇÕES =================
 async function telaConfig(){
  const cfg=await DB.get('config','supabase')||{},email=await Sync.logado();
@@ -547,7 +589,7 @@ async function telaConfig(){
  <div class="lbl">Login</div>
  ${email?`<p>Conectado como <b>${esc(email)}</b></p><div class="row"><button class="pri fix" data-a="syncAgora">Sincronizar agora</button><button class="fix" data-a="sair">Sair</button></div>`
  :`<input id="cfg-email" type="email" placeholder="email" autocomplete="username"><input id="cfg-senha" type="password" placeholder="senha" autocomplete="current-password" style="margin-top:6px"><div class="row" style="margin-top:8px"><button class="pri fix" data-a="entrar">Entrar</button></div>`}
- <p class="muted">A URL e a chave ficam só neste aparelho. Nunca use a chave secreta / service_role.</p></div>
+ <div id="imp-prev"></div><p class="muted">A URL e a chave ficam só neste aparelho. Nunca use a chave secreta / service_role.</p></div>
  <h3>Exportar</h3><div class="card"><div class="row"><button class="fix" data-a="expAgente" style="border-color:var(--c);color:var(--c)">JSON para IA (tudo, sem imagens)</button><button class="fix" data-a="backup" style="border-color:var(--c);color:var(--c)">Backup completo (com imagens)</button></div></div>
  <h3>Importar</h3><div class="card"><textarea id="imp-txt" placeholder="Cole o JSON aqui ou deixe vazio para escolher um arquivo"></textarea>
  <div class="row" style="margin-top:8px"><button class="fix" data-a="imp" data-v="backup">Backup completo</button><button class="fix" data-a="imp" data-v="outlier">Outlier (planilha)</button><button class="fix" data-a="imp" data-v="pauta">Pauta (plano de ação)</button></div></div>
@@ -558,8 +600,11 @@ async function telaConfig(){
  acoes.syncAgora=async()=>toast(await Sync.sincronizar()?'Sincronizado':'Falha na sincronização (veja o console)');
  acoes.expAgente=async()=>{const l=(await itensAtivos()).sort((a,b)=>a.tipo.localeCompare(b.tipo));exportarAgente(l,`obra-ciencia-agente-${hoje()}.json`);};
  acoes.backup=backupCompleto;
- acoes.imp=el=>{const tipo=el.dataset.v,txt=$('#imp-txt').value.trim();
-  const processar=async texto=>{try{const j=JSON.parse(texto);const n=tipo==='backup'?await importarBackup(j):await importarExterno(j,tipo);toast(`${n} item(ns) importado(s)`);$('#imp-txt').value='';}catch(e){alert('Erro ao importar: '+e.message);}};
+  acoes.imp=el=>{const tipo=el.dataset.v,txt=$('#imp-txt').value.trim();
+  const processar=async texto=>{try{const j=JSON.parse(texto);
+   if(tipo==='pauta')return await previaPlano(j);
+   const n=tipo==='backup'?await importarBackup(j):await importarExterno(j,tipo);
+   toast(`${n} item(ns) importado(s)`);$('#imp-txt').value='';}catch(e){alert('Erro ao importar: '+e.message);}};
   txt?processar(txt):escolherJSON(processar);};
 }
 
