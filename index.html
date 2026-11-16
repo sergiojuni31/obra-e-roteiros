@@ -486,29 +486,6 @@ async function telaProjetos(){
  desenhar();
 }
 
-// ================= TELA: PROJETOS =================
-function prazoTag(p,c){if(!p.data_alvo||!c.atual)return '';const d=diasAte(p.data_alvo);
- return `<span class="tag ${d<=7||p.tipo_video==='tendência'?'q':''}">${fmtData(p.data_alvo)} · ${textoPrazo(d)}</span>`;}
-function cardProjeto(p){const c=calc(p);
- return `<div class="card click" onclick="location.hash='#projeto/${p.id}'"><b>${esc(p.titulo||'(sem título)')}</b>
- <div>${p.pilar?`<span class="tag">${esc(p.pilar)}</span>`:''}<span class="tag">${esc(p.tipo_video)}</span>${prazoTag(p,c)}${c.pul?`<span class="tag q">${c.pul} pulado(s)</span>`:''}</div>
- <div class="bar"><div style="width:${c.pct}%"></div></div>
- <div class="muted" style="font-family:var(--mono)">${c.pct}% · ${c.atual?`<span style="color:var(--q)">${c.atual.n}. ${esc(c.atual.nome)}</span>`:'<span style="color:var(--c)">concluído</span>'}</div></div>`;}
-async function telaProjetos(){
- const todos=(await itensAtivos('projeto')).sort((a,b)=>(a.data_alvo||'9999').localeCompare(b.data_alvo||'9999')||(b.atualizado_em||'').localeCompare(a.atualizado_em||''));
- const pil=await listaPilares(),f=filtros.projetos;
- $('#app').innerHTML=`<div class="row"><button class="pri fix" data-a="novo">+ Novo projeto</button></div>
- <div class="row" style="margin-top:8px"><input id="f-q" placeholder="Buscar em tudo…" value="${esc(f.q)}" style="flex:3 1 180px">${sel('f-pilar',pil,f.pilar,'Pilar: todos')}${sel('f-status',['em andamento','concluído'],f.status,'Status: todos')}${sel('f-etapa',ETAPAS.map((e,i)=>`${i+1}. ${e[0]}`),f.etapa,'Etapa atual: todas')}
- <label class="muted">Data-alvo até<input type="date" id="f-ate" value="${esc(f.ate)}"></label></div><div id="lista"></div>`;
- const desenhar=()=>{const q=norm(f.q);
-  const l=todos.filter(p=>{const c=calc(p);const et=c.atual?`${c.atual.n}. ${c.atual.nome}`:'';
-   return (!q||norm(JSON.stringify(p)).includes(q))&&(!f.pilar||p.pilar===f.pilar)&&(!f.status||(f.status==='concluído')===!c.atual)&&(!f.etapa||et===f.etapa)&&(!f.ate||(p.data_alvo&&p.data_alvo<=f.ate));});
-  $('#lista').innerHTML=l.length?l.map(cardProjeto).join(''):'<p class="muted">Nenhum projeto aqui.</p>';};
- for(const k of ['q','pilar','status','etapa','ate'])$('#f-'+k).addEventListener('input',e=>{f[k]=e.target.value;desenhar();});
- desenhar();
- acoes.novo=async()=>{const p=novoProjeto();await salvar(p);aba='resumo';location.hash='#projeto/'+p.id;};
-}
-
 // ================= TELA: PROJETO =================
 function htmlChecklist(p){const c=calc(p);
  return `${c.pul?`<div class="aviso">⚠ ${c.pul} item(ns) pulado(s). Ficam registrados no JSON exportado para o agente cobrar.</div>`:''}
