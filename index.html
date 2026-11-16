@@ -1,6 +1,577 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Obra e Roteiros</title></head>
-<body style="margin:0;height:100vh;display:grid;place-items:center;background:#141619;color:#EAE8E3;font-family:system-ui">
-<div style="text-align:center"><h1>OBRA <span style="color:#FF5A1F">&amp;</span> <span style="color:#00A8E8">ROTEIROS</span></h1><p>GitHub Pages funcionando.</p></div>
-</body></html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#141619">
+<title>Estúdio Obra & Ciência</title>
+<style>
+:root{--bg:#141619;--bg2:#1c1f23;--bg3:#262a2f;--tx:#EAE8E3;--q:#FF5A1F;--c:#00A8E8;--g:#9b9991;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--bg3)}
+.logo{font-weight:700;margin-right:auto;white-space:nowrap;letter-spacing:.02em}
+nav a{color:var(--g);text-decoration:none;padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:13px}
+nav a.on{color:var(--tx);background:var(--bg3)}
+main{max-width:900px;margin:0 auto;padding:12px 12px 60px}
+input,textarea,select,button{font:inherit;color:inherit}
+input,textarea,select{width:100%;background:var(--bg2);border:1px solid var(--bg3);border-radius:6px;padding:8px}
+textarea{min-height:70px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:1px solid var(--c)}
+button,.btn{background:var(--bg3);border:1px solid #33383e;border-radius:6px;padding:7px 12px;cursor:pointer;color:var(--tx);text-decoration:none;display:inline-block}
+button:disabled{opacity:.4;cursor:default}
+button.pri{background:var(--c);border-color:var(--c);color:#06131a;font-weight:600}
+button.q{border-color:var(--q);color:var(--q)}
+button.mini{padding:3px 8px;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 140px}
+.row>.fix{flex:0 0 auto}
+.card{background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:12px;margin:8px 0}
+.card.click{cursor:pointer}
+.lbl{font-family:var(--mono);font-size:11px;color:var(--g);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 4px}
+.tag{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;background:var(--bg3);color:var(--g);margin:2px 4px 2px 0;display:inline-block}
+.tag.q{color:var(--q);border:1px solid var(--q);background:none}
+.tag.c{color:var(--c);border:1px solid var(--c);background:none}
+.muted{color:var(--g);font-size:13px}
+h2,h3{margin:14px 0 6px}
+.bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:6px 0}
+.bar>div{height:100%;background:var(--c)}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin:10px 0;padding-bottom:4px}
+.tabs button{white-space:nowrap;font-family:var(--mono);font-size:12px}
+.tabs button.on{border-color:var(--q);color:var(--q)}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px}
+.thumb{width:150px;background:var(--bg3);border-radius:6px;overflow:hidden;position:relative}
+.thumb img{width:100%;height:105px;object-fit:cover;display:block;cursor:zoom-in;background:#0c0d0f}
+.thumb input{border:0;border-radius:0;font-size:12px;padding:5px 6px}
+.thumb .x{position:absolute;top:4px;right:4px}
+.etapa{border-left:3px solid var(--bg3);padding:8px 10px;margin:8px 0;background:var(--bg2);border-radius:0 8px 8px 0}
+.etapa.atual{border-left-color:var(--q)}
+.etapa.ok{border-left-color:var(--c)}
+.etapa.na{opacity:.6}
+.etapa h4{margin:0 0 6px;display:flex;gap:8px;align-items:center;font-size:15px;flex-wrap:wrap}
+.etapa.atual h4{color:var(--q)}
+.item{display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid var(--bg3)}
+.item .t{flex:1}
+.item.feito .t{color:var(--c)}
+.item.nao_se_aplica .t{color:var(--g);text-decoration:line-through}
+.item.pulado .t{color:var(--q)}
+.st{display:flex;gap:3px}
+.st button{padding:2px 7px;font-size:11px;font-family:var(--mono)}
+.st button.on.feito{background:var(--c);color:#06131a;border-color:var(--c)}
+.st button.on.nao_se_aplica{background:var(--g);color:#141619;border-color:var(--g)}
+.st button.on.pulado{border-color:var(--q);color:var(--q)}
+.aviso{border:1px solid var(--q);color:var(--q);padding:8px 10px;border-radius:6px;margin:8px 0}
+#sync-status{width:14px;height:14px;padding:0;border-radius:50%;border:none;background:var(--g);flex:none}
+#sync-status[data-estado=ok]{background:var(--c)}
+#sync-status[data-estado=pendente]{background:var(--q)}
+#sync-status[data-estado=sincronizando]{background:var(--c);animation:pulsa 1s infinite}
+@keyframes pulsa{50%{opacity:.3}}
+#zoom{position:fixed;inset:0;background:#000e;display:none;align-items:center;justify-content:center;z-index:20}
+#zoom img{max-width:96vw;max-height:96vh}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--c);padding:8px 14px;border-radius:6px;display:none;z-index:30}
+a{color:var(--c)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">OBRA <span style="color:var(--q)">&amp;</span> <span style="color:var(--c)">CIÊNCIA</span></div>
+  <nav><a href="#ideias" id="n-ideias">Ideias</a><a href="#projetos" id="n-projetos">Projetos</a><a href="#config" id="n-config">Config</a></nav>
+  <button id="sync-status" data-estado="offline" title="Modo offline"></button>
+</header>
+<main id="app"></main>
+<input type="file" id="arquivo" accept="image/*" multiple hidden>
+<input type="file" id="arquivo-json" accept=".json,application/json" hidden>
+<div id="zoom"></div><div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+// ================= CONSTANTES =================
+const ORIGENS=['outlier','tendência','busca','comentário','própria'];
+const STATUS_IDEIA=['nova','analisando','virou projeto','descartada'];
+const COR_STATUS={nova:'q',analisando:'q','virou projeto':'c',descartada:''};
+const ETAPAS=[
+ ['Validação',['Outlier ou tendência que justifica o tema','Busca real (autocompletar, Google Trends)','Timing definido (data-alvo)','Ângulo próprio do canal definido','Encaixe no nicho (cultura pop só como porta de entrada)']],
+ ['Pesquisa e fontes',['Fontes principais reunidas','Concorrentes que já fizeram o tema assistidos','Virada narrativa identificada']],
+ ['Checagem na fonte original',['Todo número ligado a uma fonte','Dados secundários confirmados na origem','Estimativas marcadas como estimativa']],
+ ['Roteiro',['Gancho de até 40 s','Blocos escritos','Marcações de edição e SFX','Leitura em voz alta e cortes','Fecho com gancho para o próximo vídeo']],
+ ['Experimento de bancada',['Maquetes impressas','Teste de controle','Medição em mais de um dia','Gráfico com os dados reais']],
+ ['Renders e animações',['Lista de cenas','Modelagem no SketchUp','Renders no V-Ray','Gráficos na paleta térmica']],
+ ['Narração',['Gravação','Limpeza do áudio']],
+ ['Edição',['Corte bruto','Inserção de visuais e memes','Trilha da Biblioteca de Áudio do YouTube','Legendas','Revisão final assistindo inteiro']],
+ ['Miniaturas',['3 variações criadas','Legibilidade conferida em tamanho pequeno']],
+ ['Título, descrição e capítulos',['3 títulos para teste','Descrição com fontes','Capítulos','Links de afiliado']],
+ ['Publicação',['Categoria Educação','Playlist do pilar','Teste de título/miniatura ativado','Tela final indicando vídeo técnico','Shorts de divulgação']],
+ ['Métricas e lições',['Números de 48 h','Números de 7 dias','Números de 28 dias','Lições registradas','Planilha de outliers e plano de ação atualizados']]
+];
+const ROTULO_EST={feito:'✓',nao_se_aplica:'N/A',pulado:'Pular'};
+const ABAS=[['resumo','Resumo'],['checklist','Checklist'],['fontes','Fontes'],['checagem','Checagem'],['roteiro','Roteiro'],['galeria','Galeria'],['miniaturas','Miniaturas'],['diario','Diário'],['metricas','Métricas']];
+const MOTIVO_SEM_EXP='Vídeo sem experimento';
+
+// ================= UTILITÁRIOS =================
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const agora=()=>new Date().toISOString();
+const hoje=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const diasAte=d=>Math.round((new Date(d+'T00:00:00')-new Date(hoje()+'T00:00:00'))/864e5);
+const fmtData=d=>d?d.split('-').reverse().join('/'):'';
+const textoPrazo=d=>d<0?`atrasado ${-d} dia(s)`:d===0?'é hoje':`faltam ${d} dia(s)`;
+const slug=s=>norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'projeto';
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2200);}
+function baixar(texto,nome){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([texto],{type:'application/json'}));a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+const blobParaDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b);});
+function setPath(o,p,v){const ks=p.split('.');let x=o;for(let i=0;i<ks.length-1;i++)x=(x[ks[i]]??={});x[ks[ks.length-1]]=v;}
+const opts=(lista,val,primeiro)=>(primeiro!=null?`<option value="">${esc(primeiro)}</option>`:'')+lista.map(o=>`<option value="${esc(o)}"${o===val?' selected':''}>${esc(o)}</option>`).join('');
+const sel=(id,lista,val,primeiro)=>`<select id="${id}">${opts(lista,val,primeiro)}</select>`;
+const selK=(k,lista,val,primeiro)=>`<select data-k="${k}">${opts(lista,val,primeiro)}</select>`;
+const linksHtml=ls=>(ls||[]).filter(l=>/^https?:\/\//i.test(l)).map(l=>`<a href="${esc(l)}" target="_blank" rel="noopener">${esc(l.length>70?l.slice(0,70)+'…':l)}</a>`).join('<br>');
+
+// ================= INDEXEDDB =================
+let _db;
+function getDB(){return _db??=new Promise((res,rej)=>{const r=indexedDB.open('estudio_oc',1);
+ r.onupgradeneeded=()=>{const db=r.result;db.createObjectStore('itens',{keyPath:'id'});db.createObjectStore('anexos',{keyPath:'id'});db.createObjectStore('fila_sync',{keyPath:'chave'});db.createObjectStore('config',{keyPath:'chave'});};
+ r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function tx(store,modo,fn){return getDB().then(db=>new Promise((res,rej)=>{const t=db.transaction(store,modo);const r=fn(t.objectStore(store));t.oncomplete=()=>res(r?r.result:undefined);t.onerror=()=>rej(t.error);}));}
+const DB={get:(s,k)=>tx(s,'readonly',o=>o.get(k)),put:(s,v)=>tx(s,'readwrite',o=>o.put(v)),del:(s,k)=>tx(s,'readwrite',o=>o.delete(k)),all:s=>tx(s,'readonly',o=>o.getAll())};
+
+// ================= SINCRONIZAÇÃO (Supabase) =================
+const Sync=(()=>{
+ const MARGEM_MS=5*60*1000,INTERVALO_MS=3*60*1000,PAG=500;
+ let sb=null,rodando=false,timer=null,timerEnvio=null;
+ const ts=d=>Date.parse(d)||0;
+ function validar(url,key){
+  if(!/^https:\/\/.+/.test(url))throw new Error('A URL deve começar com https://');
+  if(!key)throw new Error('Cole a chave publishable.');
+  if(key.startsWith('sb_secret_'))throw new Error('Essa é a chave SECRETA. Use a publishable (sb_publishable_...).');
+  if(key.split('.').length===3){let p={};try{p=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));}catch{}
+   if(p.role==='service_role')throw new Error('Chave service_role recusada. Use a anon/publishable.');}
+ }
+ const criar=(url,key)=>typeof supabase==='undefined'?null:supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true}});
+ async function sessao(){if(!sb)return null;try{const {data}=await sb.auth.getSession();return data.session;}catch{return null;}}
+ const TXT={ok:'Sincronizado',pendente:'Alterações pendentes',offline:'Modo offline / sync desligado',sincronizando:'Sincronizando…'};
+ function status(e){const el=$('#sync-status');el.dataset.estado=e;el.title=TXT[e];}
+ async function atualizarStatus(){if(rodando)return;const s=await sessao();if(!s)return status('offline');
+  const pend=(await DB.all('fila_sync')).length;status(pend?'pendente':navigator.onLine?'ok':'offline');}
+ async function marcar(tipo,id){await DB.put('fila_sync',{chave:`${tipo}:${id}`,tipo,id,em:Date.now()});atualizarStatus();
+  clearTimeout(timerEnvio);timerEnvio=setTimeout(sincronizar,5000);}
+ async function tirarDaFila(f){const a=await DB.get('fila_sync',f.chave);if(a&&a.em===f.em)await DB.del('fila_sync',f.chave);}
+ async function puxar(){
+  const reg=await DB.get('config','ultimo_sync');
+  const desde=reg?.valor?new Date(ts(reg.valor)-MARGEM_MS).toISOString():'1970-01-01T00:00:00Z';
+  let maior=reg?.valor||null,de=0,mudou=false;
+  while(true){
+   const {data,error}=await sb.from('itens').select('*').gt('atualizado_em',desde).order('atualizado_em').range(de,de+PAG-1);
+   if(error)throw error;
+   for(const r of data){
+    if(!maior||ts(r.atualizado_em)>ts(maior))maior=r.atualizado_em;
+    const local=await DB.get('itens',r.id);
+    if(local&&ts(local.atualizado_em)>=ts(r.atualizado_em))continue;
+    await DB.put('itens',{...r.dados,id:r.id,tipo:r.tipo,atualizado_em:r.atualizado_em,apagado:r.apagado});
+    const pend=await DB.get('fila_sync',`item:${r.id}`);if(pend)await DB.del('fila_sync',pend.chave);
+    mudou=true;
+   }
+   if(data.length<PAG)break;de+=PAG;
+  }
+  if(maior)await DB.put('config',{chave:'ultimo_sync',valor:maior});
+  if(mudou)window.dispatchEvent(new CustomEvent('sync:atualizado'));
+ }
+ async function enviar(uid){
+  const fila=await DB.all('fila_sync');
+  for(const f of fila.filter(f=>f.tipo==='anexo')){
+   const a=await DB.get('anexos',f.id);if(!a?.blob){await DB.del('fila_sync',f.chave);continue;}
+   const {error}=await sb.storage.from('anexos').upload(`${uid}/${f.id}.webp`,a.blob,{upsert:true,contentType:'image/webp'});
+   if(error){console.warn('[sync] anexo',f.id,error.message);continue;}
+   await tirarDaFila(f);
+  }
+  const fi=fila.filter(f=>f.tipo==='item');
+  for(let i=0;i<fi.length;i+=200){
+   const lote=[],fs=[];
+   for(const f of fi.slice(i,i+200)){const it=await DB.get('itens',f.id);if(!it){await DB.del('fila_sync',f.chave);continue;}
+    lote.push({id:it.id,user_id:uid,tipo:it.tipo,dados:it,atualizado_em:it.atualizado_em,apagado:!!it.apagado});fs.push(f);}
+   if(!lote.length)continue;
+   const {error}=await sb.from('itens').upsert(lote,{onConflict:'id'});if(error)throw error;
+   for(const f of fs)await tirarDaFila(f);
+  }
+ }
+ async function sincronizar(){
+  if(rodando)return false;
+  if(!sb||!navigator.onLine){atualizarStatus();return false;}
+  const s=await sessao();if(!s){atualizarStatus();return false;}
+  rodando=true;status('sincronizando');let ok=true;
+  try{await puxar();await enviar(s.user.id);}catch(e){console.error('[sync]',e);ok=false;}
+  finally{rodando=false;await atualizarStatus();}
+  return ok;
+ }
+ async function obterAnexo(id){
+  const local=await DB.get('anexos',id);if(local?.blob)return local.blob;
+  const s=navigator.onLine&&await sessao();if(!s)return null;
+  try{const {data,error}=await sb.storage.from('anexos').createSignedUrl(`${s.user.id}/${id}.webp`,60);if(error)return null;
+   const r=await fetch(data.signedUrl);if(!r.ok)return null;const blob=await r.blob();
+   await DB.put('anexos',{...(local||{}),id,blob});return blob;}catch{return null;}
+ }
+ function agendar(){clearInterval(timer);timer=setInterval(sincronizar,INTERVALO_MS);}
+ async function configurar(url,key){url=url.trim();key=key.trim();validar(url,key);
+  await DB.put('config',{chave:'supabase',url,key});sb=criar(url,key);
+  if(!sb)throw new Error('Configuração salva, mas a biblioteca do Supabase não carregou. Confira a internet e recarregue.');}
+ async function entrar(email,senha){if(!sb)throw new Error('Salve a URL e a chave primeiro.');
+  const {error}=await sb.auth.signInWithPassword({email,password:senha});if(error)throw error;agendar();await sincronizar();}
+ async function sair(){try{await sb?.auth.signOut();}catch{}clearInterval(timer);atualizarStatus();}
+ async function iniciar(){const cfg=await DB.get('config','supabase');if(cfg?.url&&cfg?.key)sb=criar(cfg.url,cfg.key);
+  if(await sessao()){agendar();sincronizar();}else atualizarStatus();}
+ window.addEventListener('online',sincronizar);
+ window.addEventListener('offline',atualizarStatus);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sincronizar();});
+ return {iniciar,configurar,entrar,sair,sincronizar,obterAnexo,
+  marcarItem:id=>marcar('item',id),marcarAnexo:id=>marcar('anexo',id),
+  logado:async()=>(await sessao())?.user?.email||null};
+})();
+
+// ================= DADOS =================
+async function salvar(item){item.atualizado_em=agora();await DB.put('itens',item);await Sync.marcarItem(item.id);}
+const pendSalvar=new Map();
+function salvarDepois(item){clearTimeout(pendSalvar.get(item.id)?.t);pendSalvar.set(item.id,{item,t:setTimeout(()=>{pendSalvar.delete(item.id);salvar(item);},500)});}
+function salvarPendentes(){for(const [,p] of pendSalvar){clearTimeout(p.t);salvar(p.item);}pendSalvar.clear();}
+async function apagar(item){item.apagado=true;await salvar(item);}
+async function itensAtivos(tipo){return (await DB.all('itens')).filter(i=>!i.apagado&&(!tipo||i.tipo===tipo));}
+async function listaPilares(){return [...new Set((await itensAtivos()).map(i=>i.pilar).filter(Boolean))].sort();}
+
+function novaIdeia(base={}){const t=agora();return {id:uuid(),tipo:'ideia',titulo:'',nota:'',links:[],prints:[],pilar:'',tags:[],origem:'própria',status:'nova',origem_id:null,projeto_id:null,criado_em:t,atualizado_em:t,apagado:false,...base};}
+function novoProjeto(base={}){const t=agora();return {id:uuid(),tipo:'projeto',titulo:'',titulos_alt:[],pilar:'',tipo_video:'perene',formato:'com experimento',data_alvo:'',ideia_id:null,origem_id:null,
+ checklist:ETAPAS.map(([nome,itens],i)=>({n:i+1,nome,motivo:'',itens:itens.map(t=>({t,estado:'pendente',motivo:''}))})),
+ fontes:[],checagem:[],roteiro:['Gancho','Promessa','Bloco 1','Fecho'].map(b=>({bloco:b,narracao:'',marcacoes:'',duracao:null})),
+ galeria:[],miniaturas:[],diario:[],metricas:{h48:'',d7:'',d28:'',licoes:''},criado_em:t,atualizado_em:t,apagado:false,...base};}
+
+function calc(p){let feitos=0,total=0,na=0,pul=0,atual=null;const pulados=[];
+ for(const e of p.checklist)for(const it of e.itens){total++;
+  if(it.estado==='feito')feitos++;
+  else if(it.estado==='nao_se_aplica')na++;
+  else if(it.estado==='pulado'){pul++;pulados.push(`${e.n}. ${e.nome} › ${it.t}${it.motivo?` (motivo: ${it.motivo})`:e.motivo?` (motivo: ${e.motivo})`:''}`);}
+  else if(!atual)atual=e;}
+ const base=total-na-pul;return {feitos,total,na,pul,base,pct:base?Math.round(feitos/base*100):100,atual,pulados};}
+
+function aplicarFormato(p){const e=p.checklist[4];
+ if(p.formato==='sem experimento'&&e.itens.every(i=>i.estado==='pendente')){e.itens.forEach(i=>i.estado='nao_se_aplica');e.motivo=MOTIVO_SEM_EXP;}
+ if(p.formato==='com experimento'&&e.motivo===MOTIVO_SEM_EXP){e.itens.forEach(i=>{if(i.estado==='nao_se_aplica')i.estado='pendente';});e.motivo='';}}
+
+// ================= IMAGENS =================
+async function processarImagem(file){
+ const bmp=await createImageBitmap(file);const k=Math.min(1,1600/bmp.width);
+ const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+ c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+ return new Promise(r=>c.toBlob(r,'image/webp',0.8));}
+async function novoAnexo(file){const blob=await processarImagem(file);const id=uuid();await DB.put('anexos',{id,blob});await Sync.marcarAnexo(id);return id;}
+async function anexosDe(fs){const ids=[];for(const f of fs){try{ids.push(await novoAnexo(f));}catch(e){alert('Não consegui ler a imagem '+(f.name||'')+'. Formato não suportado?');}}return ids;}
+const urls=new Map();
+async function hidratar(root){for(const img of root.querySelectorAll('img[data-anexo]')){const id=img.dataset.anexo;
+ if(!urls.has(id)){const b=await Sync.obterAnexo(id);if(!b){img.alt='imagem indisponível';continue;}urls.set(id,URL.createObjectURL(b));}
+ img.src=urls.get(id);}}
+const htmlThumbs=(arr,sec)=>`<div class="thumbs">${arr.map((x,i)=>`<div class="thumb"><img data-anexo="${x.anexo}" alt=""><input data-k="${sec}.${i}.legenda" value="${esc(x.legenda)}" placeholder="legenda"><button class="mini x" data-a="rmImg" data-s="${sec}" data-i="${i}">✕</button></div>`).join('')||'<span class="muted">Nenhuma imagem.</span>'}</div>`;
+
+let aoColarImagens=null,aoEscolher=null,aoEscolherJSON=null;
+function escolherImagens(cb,multi=true){aoEscolher=cb;const i=$('#arquivo');i.multiple=multi;i.click();}
+function escolherJSON(cb){aoEscolherJSON=cb;$('#arquivo-json').click();}
+$('#arquivo').addEventListener('change',e=>{const fs=[...e.target.files];e.target.value='';if(fs.length&&aoEscolher)aoEscolher(fs);});
+$('#arquivo-json').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(f&&aoEscolherJSON)aoEscolherJSON(await f.text());});
+document.addEventListener('paste',e=>{const fs=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));if(!fs.length||!aoColarImagens)return;e.preventDefault();aoColarImagens(fs);});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();const fs=[...(e.dataTransfer?.files||[])].filter(f=>f.type.startsWith('image/'));if(fs.length&&aoColarImagens)aoColarImagens(fs);});
+document.addEventListener('click',e=>{const img=e.target.closest('img[data-anexo]');if(img&&img.src){$('#zoom').innerHTML=`<img src="${img.src}" alt="">`;$('#zoom').style.display='flex';}});
+$('#zoom').addEventListener('click',()=>$('#zoom').style.display='none');
+
+// ================= EDIÇÃO GENÉRICA =================
+let acoes={},posAlteracao=null,editando=null,aba='checklist';
+function aoEditar(e){const el=e.target,k=el.dataset.k;if(!k||!editando)return;
+ let v=el.type==='checkbox'?el.checked:el.value;const t=el.dataset.t;
+ if(t==='lines')v=v.split('\n').map(s=>s.trim()).filter(Boolean);
+ if(t==='csv')v=v.split(',').map(s=>s.trim()).filter(Boolean);
+ if(t==='num')v=v===''?null:Number(v);
+ setPath(editando,k,v);salvarDepois(editando);posAlteracao?.(k);}
+$('#app').addEventListener('input',aoEditar);
+$('#app').addEventListener('change',aoEditar);
+$('#app').addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(el&&acoes[el.dataset.a]){e.preventDefault();acoes[el.dataset.a](el);}});
+
+function campo(k,t,l,v,ops,p){
+ const L=`<div class="lbl">${esc(l)}</div>`;
+ if(t==='textarea')return L+`<textarea data-k="${k}">${esc(v)}</textarea>`;
+ if(t==='select')return L+selK(k,ops,v,'—');
+ if(t==='check')return `<label class="row" style="margin-top:8px;flex-wrap:nowrap"><input type="checkbox" data-k="${k}" ${v?'checked':''} style="width:auto;flex:none"><span>${esc(l)}</span></label>`;
+ if(t==='num')return L+`<input type="number" min="0" data-k="${k}" data-t="num" value="${v??''}">`;
+ if(t==='date')return L+`<input type="date" data-k="${k}" value="${esc(v)}">`;
+ if(t==='fonte')return L+`<select data-k="${k}"><option value="">— sem fonte —</option>${(p.fontes||[]).map(f=>`<option value="${f.id}"${f.id===v?' selected':''}>${esc((f.descricao||f.link||'(fonte sem nome)').slice(0,80))}</option>`).join('')}</select>`;
+ if(t==='img'){const i=k.split('.')[1];return L+(v?`<div class="thumb"><img data-anexo="${v}" alt=""></div>`:'')+`<button class="mini" data-a="imgMini" data-i="${i}" style="margin-top:4px">${v?'Trocar imagem':'Escolher imagem'}</button>`;}
+ return L+`<input ${t==='url'?'type="url" inputmode="url"':''} data-k="${k}" value="${esc(v)}">`;
+}
+const SECOES={
+ fontes:{novo:()=>({id:uuid(),link:'',descricao:'',confiabilidade:'',confirmada:false}),campos:[['link','url','Link'],['descricao','text','Descrição'],['confiabilidade','select','Confiabilidade',['oficial','estudo','matéria secundária']],['confirmada','check','Confirmada na fonte original']]},
+ checagem:{novo:()=>({afirmacao:'',fonte:'',status:'a confirmar'}),campos:[['afirmacao','textarea','Número ou afirmação do roteiro'],['fonte','fonte','Fonte ligada'],['status','select','Status',['confirmado','a confirmar','cortado']]]},
+ roteiro:{novo:()=>({bloco:'Novo bloco',narracao:'',marcacoes:'',duracao:null}),campos:[['bloco','text','Bloco'],['narracao','textarea','Narração'],['marcacoes','textarea','Marcações de edição / SFX'],['duracao','num','Duração estimada (segundos)']]},
+ miniaturas:{max:3,novo:()=>({anexo:null,legenda:'',resultado:''}),campos:[['anexo','img','Imagem'],['legenda','text','Descrição da variação'],['resultado','text','Resultado do teste no YouTube Studio']]},
+ diario:{topo:true,novo:()=>({data:hoje(),texto:''}),campos:[['data','date','Data'],['texto','textarea','Decisão / observação']]}
+};
+function htmlLista(p,sec){const cfg=SECOES[sec],arr=p[sec];
+ const add=cfg.max&&arr.length>=cfg.max?`<p class="muted">Máximo de ${cfg.max}.</p>`:`<button data-a="adicionar" data-s="${sec}">+ Adicionar</button>`;
+ return (cfg.topo?add:'')+arr.map((it,i)=>`<div class="card">${cfg.campos.map(([k,t,l,ops])=>campo(`${sec}.${i}.${k}`,t,l,it[k],ops,p)).join('')}
+ <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="mini fix" data-a="subir" data-s="${sec}" data-i="${i}" ${i?'':'disabled'}>↑</button><button class="mini q fix" data-a="remover" data-s="${sec}" data-i="${i}">Remover</button></div></div>`).join('')+(cfg.topo?'':add);}
+
+// ================= ROTEAMENTO =================
+async function render(){
+ salvarPendentes();aoColarImagens=null;acoes={};posAlteracao=null;editando=null;
+ const [rota,id]=(location.hash.slice(1)||'ideias').split('/');
+ const sec={ideias:'ideias',ideia:'ideias',projetos:'projetos',projeto:'projetos',config:'config'}[rota]||'ideias';
+ for(const n of ['ideias','projetos','config'])$('#n-'+n).classList.toggle('on',n===sec);
+ window.scrollTo(0,0);
+ if(rota==='ideia')return telaIdeia(id);
+ if(rota==='projeto')return telaProjeto(id);
+ if(rota==='projetos')return telaProjetos();
+ if(rota==='config')return telaConfig();
+ return telaIdeias();
+}
+
+// ================= TELA: IDEIAS =================
+const filtros={ideias:{q:'',pilar:'',status:'',origem:''},projetos:{q:'',pilar:'',status:'',etapa:'',ate:''}};
+const tagsIdeia=i=>`<span class="tag ${COR_STATUS[i.status]||''}">${esc(i.status)}</span>${i.pilar?`<span class="tag">${esc(i.pilar)}</span>`:''}<span class="tag">${esc(i.origem)}</span>${i.links.length?`<span class="tag">links ${i.links.length}</span>`:''}${i.prints.length?`<span class="tag">prints ${i.prints.length}</span>`:''}${(i.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}`;
+const cardIdeia=i=>`<div class="card click" onclick="location.hash='#ideia/${i.id}'"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${i.prints[0]?`<img data-anexo="${i.prints[0].anexo}" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:4px;flex:none;pointer-events:none">`:''}<div style="flex:1"><b>${esc(i.titulo)}</b><div>${tagsIdeia(i)}</div>${i.nota?`<div class="muted">${esc(i.nota.slice(0,140))}</div>`:''}</div></div></div>`;
+
+async function capturar(texto,arquivos=[]){
+ texto=(texto||'').trim();if(!texto&&!arquivos.length)return;
+ const ehLink=/^https?:\/\/\S+$/i.test(texto);
+ const ideia=novaIdeia({titulo:ehLink?'':texto,links:ehLink?[texto]:[]});
+ for(const id of await anexosDe(arquivos))ideia.prints.push({anexo:id,legenda:''});
+ if(!ideia.titulo)ideia.titulo=ehLink?(()=>{try{return 'Link: '+new URL(texto).hostname.replace(/^www\./,'');}catch{return texto;}})():'Print '+new Date().toLocaleString('pt-BR');
+ await salvar(ideia);toast('Ideia salva');
+}
+async function telaIdeias(){
+ const todas=(await itensAtivos('ideia')).sort((a,b)=>(b.criado_em||'').localeCompare(a.criado_em||''));
+ const pil=await listaPilares(),f=filtros.ideias;
+ $('#app').innerHTML=`<div class="card"><div class="row"><input id="cap" placeholder="Anotar ideia ou colar link… (Enter)" autocomplete="off" style="flex:5 1 200px"><button class="pri fix" data-a="cap">Salvar</button><button class="fix" data-a="capFoto" title="Câmera ou galeria">📷</button></div>
+ <div class="muted" style="margin-top:6px">No PC: Ctrl+V com um print cria uma ideia na hora. Arrastar imagens também funciona.</div></div>
+ <div class="row"><input id="f-q" placeholder="Buscar em tudo…" value="${esc(f.q)}" style="flex:3 1 180px">${sel('f-pilar',pil,f.pilar,'Pilar: todos')}${sel('f-status',STATUS_IDEIA,f.status,'Status: ativas')}${sel('f-origem',ORIGENS,f.origem,'Origem: todas')}</div>
+ <div id="lista"></div>`;
+ const desenhar=()=>{const q=norm(f.q);
+  const l=todas.filter(i=>(!q||norm(JSON.stringify(i)).includes(q))&&(!f.pilar||i.pilar===f.pilar)&&(f.status?i.status===f.status:!['virou projeto','descartada'].includes(i.status))&&(!f.origem||i.origem===f.origem));
+  $('#lista').innerHTML=l.length?l.map(cardIdeia).join(''):'<p class="muted">Nenhuma ideia aqui.</p>';hidratar($('#lista'));};
+ for(const k of ['q','pilar','status','origem'])$('#f-'+k).addEventListener('input',e=>{f[k]=e.target.value;desenhar();});
+ desenhar();
+ const cap=$('#cap');
+ cap.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();acoes.cap();}});
+ acoes.cap=async()=>{const t=cap.value;if(!t.trim())return cap.focus();await capturar(t);telaIdeias();};
+ acoes.capFoto=()=>escolherImagens(async fs=>{await capturar(cap.value,fs);telaIdeias();});
+ aoColarImagens=async fs=>{await capturar(cap.value,fs);telaIdeias();};
+}
+
+// ================= TELA: IDEIA =================
+async function virarProjeto(ideia){
+ salvarPendentes();
+ const p=novoProjeto({titulo:ideia.titulo,pilar:ideia.pilar,ideia_id:ideia.id,origem_id:ideia.origem_id,
+  tipo_video:ideia.origem==='tendência'?'tendência':'perene',
+  fontes:ideia.links.map(l=>({id:uuid(),link:l,descricao:'',confiabilidade:'',confirmada:false})),
+  galeria:ideia.prints.map(x=>({...x})),
+  diario:[{data:hoje(),texto:'Projeto criado a partir da ideia.'+(ideia.nota?'\nNota original: '+ideia.nota:'')}]});
+ await salvar(p);ideia.status='virou projeto';ideia.projeto_id=p.id;await salvar(ideia);
+ aba='resumo';location.hash='#projeto/'+p.id;
+}
+async function telaIdeia(id){
+ const i=await DB.get('itens',id);
+ if(!i||i.apagado||i.tipo!=='ideia'){$('#app').innerHTML='<p class="muted">Ideia não encontrada. <a href="#ideias">Voltar</a></p>';return;}
+ editando=i;const pil=await listaPilares();
+ $('#app').innerHTML=`<a href="#ideias" class="muted">← Ideias</a>
+ <div class="lbl">Título</div><input data-k="titulo" value="${esc(i.titulo)}">
+ <div class="lbl">Nota</div><textarea data-k="nota">${esc(i.nota)}</textarea>
+ <div class="lbl">Links (um por linha)</div><textarea data-k="links" data-t="lines">${esc(i.links.join('\n'))}</textarea>
+ <div id="links-abrir" class="muted" style="margin-top:4px">${linksHtml(i.links)}</div>
+ <div class="lbl">Prints</div><div id="prints"></div>
+ <div class="row" style="margin-top:6px"><button class="fix" data-a="addPrint">📷 Adicionar imagem</button><span class="muted">ou Ctrl+V / arrastar</span></div>
+ <div class="row"><div><div class="lbl">Pilar</div><input data-k="pilar" list="dl-pilares" value="${esc(i.pilar)}"></div>
+ <div><div class="lbl">Tags (separadas por vírgula)</div><input data-k="tags" data-t="csv" value="${esc((i.tags||[]).join(', '))}"></div></div>
+ <div class="row"><div><div class="lbl">Origem</div>${selK('origem',ORIGENS,i.origem)}</div><div><div class="lbl">Status</div>${selK('status',STATUS_IDEIA,i.status)}</div></div>
+ ${i.origem_id?`<div class="lbl">ID de origem</div><div class="muted" style="font-family:var(--mono)">${esc(i.origem_id)}</div>`:''}
+ <datalist id="dl-pilares">${pil.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+ <div class="row" style="margin-top:16px">${i.projeto_id?`<a class="btn fix" href="#projeto/${i.projeto_id}">Abrir projeto →</a>`:`<button class="pri fix" data-a="virar">Transformar em projeto</button>`}<button class="q fix" data-a="excluir">Excluir ideia</button></div>
+ <p class="muted">Tudo é salvo automaticamente.</p>`;
+ const desenharPrints=()=>{$('#prints').innerHTML=htmlThumbs(i.prints,'prints');hidratar($('#prints'));};
+ desenharPrints();
+ const addImgs=async fs=>{for(const id of await anexosDe(fs))i.prints.push({anexo:id,legenda:''});await salvar(i);desenharPrints();};
+ acoes.addPrint=()=>escolherImagens(addImgs);aoColarImagens=addImgs;
+ acoes.rmImg=el=>{if(!confirm('Remover esta imagem?'))return;i.prints.splice(+el.dataset.i,1);salvar(i);desenharPrints();};
+ acoes.virar=()=>virarProjeto(i);
+ acoes.excluir=async()=>{if(!confirm('Excluir esta ideia?'))return;await apagar(i);location.hash='#ideias';};
+ posAlteracao=k=>{if(k==='links')$('#links-abrir').innerHTML=linksHtml(i.links);};
+}
+
+// ================= TELA: PROJETOS =================
+function prazoTag(p,c){if(!p.data_alvo||!c.atual)return '';const d=diasAte(p.data_alvo);
+ return `<span class="tag ${d<=7||p.tipo_video==='tendência'?'q':''}">${fmtData(p.data_alvo)} · ${textoPrazo(d)}</span>`;}
+function cardProjeto(p){const c=calc(p);
+ return `<div class="card click" onclick="location.hash='#projeto/${p.id}'"><b>${esc(p.titulo||'(sem título)')}</b>
+ <div>${p.pilar?`<span class="tag">${esc(p.pilar)}</span>`:''}<span class="tag">${esc(p.tipo_video)}</span>${prazoTag(p,c)}${c.pul?`<span class="tag q">${c.pul} pulado(s)</span>`:''}</div>
+ <div class="bar"><div style="width:${c.pct}%"></div></div>
+ <div class="muted" style="font-family:var(--mono)">${c.pct}% · ${c.atual?`<span style="color:var(--q)">${c.atual.n}. ${esc(c.atual.nome)}</span>`:'<span style="color:var(--c)">concluído</span>'}</div></div>`;}
+async function telaProjetos(){
+ const todos=(await itensAtivos('projeto')).sort((a,b)=>(a.data_alvo||'9999').localeCompare(b.data_alvo||'9999')||(b.atualizado_em||'').localeCompare(a.atualizado_em||''));
+ const pil=await listaPilares(),f=filtros.projetos;
+ $('#app').innerHTML=`<div class="row"><button class="pri fix" data-a="novo">+ Novo projeto</button></div>
+ <div class="row" style="margin-top:8px"><input id="f-q" placeholder="Buscar em tudo…" value="${esc(f.q)}" style="flex:3 1 180px">${sel('f-pilar',pil,f.pilar,'Pilar: todos')}${sel('f-status',['em andamento','concluído'],f.status,'Status: todos')}${sel('f-etapa',ETAPAS.map((e,i)=>`${i+1}. ${e[0]}`),f.etapa,'Etapa atual: todas')}
+ <label class="muted">Data-alvo até<input type="date" id="f-ate" value="${esc(f.ate)}"></label></div><div id="lista"></div>`;
+ const desenhar=()=>{const q=norm(f.q);
+  const l=todos.filter(p=>{const c=calc(p);const et=c.atual?`${c.atual.n}. ${c.atual.nome}`:'';
+   return (!q||norm(JSON.stringify(p)).includes(q))&&(!f.pilar||p.pilar===f.pilar)&&(!f.status||(f.status==='concluído')===!c.atual)&&(!f.etapa||et===f.etapa)&&(!f.ate||(p.data_alvo&&p.data_alvo<=f.ate));});
+  $('#lista').innerHTML=l.length?l.map(cardProjeto).join(''):'<p class="muted">Nenhum projeto aqui.</p>';};
+ for(const k of ['q','pilar','status','etapa','ate'])$('#f-'+k).addEventListener('input',e=>{f[k]=e.target.value;desenhar();});
+ desenhar();
+ acoes.novo=async()=>{const p=novoProjeto();await salvar(p);aba='resumo';location.hash='#projeto/'+p.id;};
+}
+
+// ================= TELA: PROJETO =================
+function htmlChecklist(p){const c=calc(p);
+ return `${c.pul?`<div class="aviso">⚠ ${c.pul} item(ns) pulado(s). Ficam registrados no JSON exportado para o agente cobrar.</div>`:''}
+ <p class="muted">✓ feito · N/A não se aplica (não conta) · Pular = deveria ser feito, pulado por decisão (não conta, mas fica registrado). Toque de novo para voltar a pendente.</p>
+ ${p.checklist.map((e,ei)=>{const est=e.itens.map(i=>i.estado);const ok=est.every(s=>s!=='pendente');
+  const cls=c.atual===e?'atual':ok?(est.some(s=>s==='feito')?'ok':'na'):'';
+  return `<div class="etapa ${cls}"><h4><span class="tag">${e.n}</span>${esc(e.nome)}${c.atual===e?'<span class="tag q">ATUAL</span>':''}${est.includes('pulado')?'<span class="tag q">pulos</span>':''}</h4>
+  ${e.motivo?`<div class="muted">Motivo: ${esc(e.motivo)}</div>`:''}
+  ${e.itens.map((it,ii)=>`<div class="item ${it.estado}"><span class="t">${esc(it.t)}${it.motivo?` <em class="muted">(${esc(it.motivo)})</em>`:''}</span><span class="st">${Object.keys(ROTULO_EST).map(s=>`<button class="${it.estado===s?'on '+s:''}" data-a="estado" data-e="${ei}" data-i="${ii}" data-s="${s}">${ROTULO_EST[s]}</button>`).join('')}</span></div>`).join('')}
+  <div class="row" style="margin-top:6px"><button class="mini fix" data-a="etapaEstado" data-e="${ei}" data-s="nao_se_aplica">Etapa: não se aplica</button><button class="mini fix" data-a="etapaEstado" data-e="${ei}" data-s="pulado">Etapa: pular</button><button class="mini fix" data-a="etapaEstado" data-e="${ei}" data-s="pendente">Restaurar</button></div></div>`;}).join('')}`;}
+const txtDuracao=p=>{const t=Math.round(p.roteiro.reduce((s,b)=>s+(Number(b.duracao)||0),0));return `Duração total estimada: ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;};
+function htmlAba(p){
+ switch(aba){
+  case 'resumo':return `${campo('titulo','text','Título de trabalho',p.titulo)}
+   <div class="lbl">Títulos alternativos (um por linha)</div><textarea data-k="titulos_alt" data-t="lines">${esc(p.titulos_alt.join('\n'))}</textarea>
+   <div class="lbl">Pilar</div><input data-k="pilar" list="dl-pilares" value="${esc(p.pilar)}">
+   <div class="row"><div><div class="lbl">Tipo</div>${selK('tipo_video',['perene','sazonal','tendência'],p.tipo_video)}</div>
+   <div><div class="lbl">Formato</div>${selK('formato',['com experimento','sem experimento'],p.formato)}</div>
+   <div>${campo('data_alvo','date','Data-alvo',p.data_alvo)}</div></div>
+   ${p.ideia_id?`<p class="muted">Veio da <a href="#ideia/${p.ideia_id}">ideia original</a>.</p>`:''}${p.origem_id?`<p class="muted">ID de origem: <span style="font-family:var(--mono)">${esc(p.origem_id)}</span></p>`:''}
+   <div class="row" style="margin-top:16px"><button class="fix" data-a="exportar" style="border-color:var(--c);color:var(--c)">Baixar JSON para IA</button><button class="fix" data-a="copiar" style="border-color:var(--c);color:var(--c)">Copiar JSON para IA</button><button class="q fix" data-a="excluir">Excluir projeto</button></div>`;
+  case 'checklist':return htmlChecklist(p);
+  case 'galeria':return `<div class="row" style="margin-bottom:8px"><button class="fix" data-a="addGaleria">📷 Adicionar imagem</button><span class="muted">ou Ctrl+V / arrastar</span></div>${htmlThumbs(p.galeria,'galeria')}`;
+  case 'metricas':return [['h48','Números de 48 h'],['d7','Números de 7 dias'],['d28','Números de 28 dias'],['licoes','Lições aprendidas']].map(([k,l])=>campo('metricas.'+k,'textarea',l,p.metricas[k])).join('');
+  case 'roteiro':return `<div class="muted" id="dur" style="font-family:var(--mono)">${txtDuracao(p)}</div>`+htmlLista(p,'roteiro');
+  default:return htmlLista(p,aba);
+ }
+}
+async function telaProjeto(id){
+ const p=await DB.get('itens',id);
+ if(!p||p.apagado||p.tipo!=='projeto'){$('#app').innerHTML='<p class="muted">Projeto não encontrado. <a href="#projetos">Voltar</a></p>';return;}
+ editando=p;const pil=await listaPilares();
+ $('#app').innerHTML=`<a href="#projetos" class="muted">← Projetos</a><div id="cab"></div><div class="tabs" id="tabs"></div><div id="sec"></div><datalist id="dl-pilares">${pil.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+ const desenharCab=()=>{const c=calc(p),tend=p.tipo_video==='tendência';
+  $('#cab').innerHTML=`<h2>${esc(p.titulo||'(sem título)')}</h2>
+  <div>${p.pilar?`<span class="tag">${esc(p.pilar)}</span>`:''}<span class="tag">${esc(p.tipo_video)}</span><span class="tag">${esc(p.formato)}</span>${prazoTag(p,c)}${c.pul?`<span class="tag q">${c.pul} pulado(s)</span>`:''}</div>
+  ${tend&&c.atual?(p.data_alvo?`<div class="aviso">⏱ Tendência: ${textoPrazo(diasAte(p.data_alvo))} para a data-alvo (${fmtData(p.data_alvo)}).</div>`:'<div class="aviso">⏱ Tendência sem data-alvo definida.</div>'):''}
+  <div class="bar"><div style="width:${c.pct}%"></div></div>
+  <div class="muted" style="font-family:var(--mono)">${c.pct}% · ${c.feitos}/${c.base} · ${c.atual?`<span style="color:var(--q)">Etapa atual: ${c.atual.n}. ${esc(c.atual.nome)}</span>`:'<span style="color:var(--c)">Checklist concluído</span>'}</div>`;};
+ const desenharTabs=()=>{$('#tabs').innerHTML=ABAS.map(([k,l])=>`<button data-a="aba" data-v="${k}" class="${k===aba?'on':''}">${l}</button>`).join('');};
+ const desenharSec=()=>{const s=$('#sec');s.innerHTML=htmlAba(p);hidratar(s);};
+ desenharCab();desenharTabs();desenharSec();
+ const mudouChecklist=()=>{salvar(p);desenharSec();desenharCab();};
+ acoes.aba=el=>{aba=el.dataset.v;desenharTabs();desenharSec();};
+ acoes.estado=el=>{const it=p.checklist[+el.dataset.e].itens[+el.dataset.i],s=el.dataset.s;
+  if(it.estado===s){it.estado='pendente';it.motivo='';}
+  else{it.estado=s;it.motivo=s==='pulado'?(prompt('Motivo para pular (opcional):')||''):'';}
+  mudouChecklist();};
+ acoes.etapaEstado=el=>{const e=p.checklist[+el.dataset.e],s=el.dataset.s;
+  if(s==='pendente'){e.itens.forEach(it=>{if(it.estado!=='feito'){it.estado='pendente';it.motivo='';}});e.motivo='';}
+  else{const m=prompt(s==='pulado'?'Motivo para pular a etapa inteira (opcional):':'Por que não se aplica? (opcional)');if(m===null)return;
+   e.motivo=m;e.itens.forEach(it=>{if(it.estado!=='feito'){it.estado=s;it.motivo='';}});}
+  mudouChecklist();};
+ acoes.adicionar=el=>{const s=el.dataset.s,n=SECOES[s].novo();SECOES[s].topo?p[s].unshift(n):p[s].push(n);salvar(p);desenharSec();};
+ acoes.remover=el=>{if(!confirm('Remover este item?'))return;p[el.dataset.s].splice(+el.dataset.i,1);salvar(p);desenharSec();};
+ acoes.subir=el=>{const a=p[el.dataset.s],i=+el.dataset.i;[a[i-1],a[i]]=[a[i],a[i-1]];salvar(p);desenharSec();};
+ const addGaleria=async fs=>{for(const id of await anexosDe(fs))p.galeria.push({anexo:id,legenda:''});await salvar(p);
+  if(aba==='galeria')desenharSec();else toast('Imagem adicionada à galeria');};
+ acoes.addGaleria=()=>escolherImagens(addGaleria);aoColarImagens=addGaleria;
+ acoes.rmImg=el=>{if(!confirm('Remover esta imagem?'))return;p.galeria.splice(+el.dataset.i,1);salvar(p);desenharSec();};
+ acoes.imgMini=el=>escolherImagens(async fs=>{const [id]=await anexosDe(fs.slice(0,1));if(!id)return;p.miniaturas[+el.dataset.i].anexo=id;await salvar(p);desenharSec();},false);
+ acoes.exportar=()=>{salvarPendentes();exportarAgente([p],`projeto-${slug(p.titulo)}.json`);};
+ acoes.copiar=async()=>{salvarPendentes();try{await navigator.clipboard.writeText(JSON.stringify(jsonAgente([p]),null,2));toast('JSON copiado');}catch{alert('Não consegui copiar. Use "Baixar JSON".');}};
+ acoes.excluir=async()=>{if(!confirm('Excluir este projeto?'))return;await apagar(p);location.hash='#projetos';};
+ posAlteracao=k=>{if(k==='formato'){aplicarFormato(p);if(aba==='checklist')desenharSec();}
+  if(['titulo','pilar','tipo_video','formato','data_alvo'].includes(k))desenharCab();
+  if(k.endsWith('.duracao')&&$('#dur'))$('#dur').textContent=txtDuracao(p);};
+}
+
+// ================= EXPORTAÇÃO / IMPORTAÇÃO =================
+function paraAgente(i){const leg=arr=>(arr||[]).map(x=>({legenda:x.legenda||'(sem legenda)'}));
+ if(i.tipo==='ideia')return {id:i.id,tipo:'ideia',titulo:i.titulo,nota:i.nota,links:i.links,pilar:i.pilar,tags:i.tags,origem:i.origem,status:i.status,origem_id:i.origem_id,prints:leg(i.prints)};
+ const c=calc(i),fonte=id=>{const f=i.fontes.find(f=>f.id===id);return f?(f.descricao||f.link):null;};
+ return {id:i.id,tipo:'projeto',titulo:i.titulo,titulos_alternativos:i.titulos_alt,pilar:i.pilar,tipo_video:i.tipo_video,formato:i.formato,data_alvo:i.data_alvo||null,origem_id:i.origem_id,
+  progresso:{percentual:c.pct,feitos:c.feitos,considerados:c.base,nao_se_aplica:c.na,pulados:c.pul,etapa_atual:c.atual?`${c.atual.n}. ${c.atual.nome}`:'concluído',itens_pulados:c.pulados},
+  checklist:i.checklist.map(e=>({etapa:e.n,nome:e.nome,motivo:e.motivo||undefined,itens:e.itens.map(it=>({item:it.t,estado:it.estado,motivo:it.motivo||undefined}))})),
+  fontes:i.fontes.map(({id,...f})=>f),checagem:i.checagem.map(x=>({afirmacao:x.afirmacao,fonte:fonte(x.fonte),status:x.status})),
+  roteiro:i.roteiro,galeria:leg(i.galeria),miniaturas:i.miniaturas.map(m=>({legenda:m.legenda,resultado:m.resultado})),decisoes:i.diario,metricas:i.metricas};}
+const jsonAgente=itens=>({app:'Estúdio Obra & Ciência',gerado_em:agora(),
+ legenda_estados:{pendente:'a fazer',feito:'concluído',nao_se_aplica:'a etapa não existe para este vídeo',pulado:'deveria ser feito e foi pulado por decisão: cobrar'},
+ itens:itens.map(paraAgente)});
+const exportarAgente=(itens,nome)=>baixar(JSON.stringify(jsonAgente(itens),null,2),nome);
+
+async function backupCompleto(){
+ toast('Gerando backup…');const itens=await DB.all('itens');const ids=new Set();
+ for(const i of itens)for(const x of [...(i.prints||[]),...(i.galeria||[]),...(i.miniaturas||[])])if(x.anexo)ids.add(x.anexo);
+ const anexos=[];let faltando=0;
+ for(const id of ids){const b=await Sync.obterAnexo(id);if(b)anexos.push({id,data:await blobParaDataURL(b)});else faltando++;}
+ baixar(JSON.stringify({formato:'estudio-oc-backup',versao:1,gerado_em:agora(),itens,anexos}),`backup-estudio-${hoje()}.json`);
+ if(faltando)alert(`${faltando} imagem(ns) não estavam neste aparelho e não puderam ser baixadas (sem login ou sem internet).`);
+}
+async function importarBackup(j){
+ if(j.formato!=='estudio-oc-backup')throw new Error('Este arquivo não é um backup do app.');
+ for(const a of j.anexos||[])if(!(await DB.get('anexos',a.id))){await DB.put('anexos',{id:a.id,blob:await (await fetch(a.data)).blob()});await Sync.marcarAnexo(a.id);}
+ let n=0;for(const it of j.itens||[]){const l=await DB.get('itens',it.id);
+  if(!l||Date.parse(it.atualizado_em)>Date.parse(l.atualizado_em)){await DB.put('itens',it);await Sync.marcarItem(it.id);n++;}}
+ return n;
+}
+async function importarExterno(j,tipo){
+ const lista=Array.isArray(j)?j:(j.itens||j.outliers||j.pautas||j.dados||j.items||[j]);
+ const existentes=new Set((await DB.all('itens')).map(i=>i.origem_id).filter(Boolean));
+ const usados=['id','origem_id','codigo','titulo','title','tema','nome','pauta','link','url','video_url','videoUrl','nota','notas','descricao','observacoes','pilar'];
+ let n=0;
+ for(const o of lista){if(!o||typeof o!=='object')continue;
+  const oid=String(o.id??o.origem_id??o.codigo??'')||null;if(oid&&existentes.has(oid))continue;
+  const link=o.link||o.url||o.video_url||o.videoUrl||'';
+  const extras=Object.entries(o).filter(([k,v])=>!usados.includes(k)&&v!==''&&v!=null&&typeof v!=='object').map(([k,v])=>`${k}: ${v}`).join('\n');
+  const nota=[o.nota||o.notas||o.descricao||o.observacoes||'',extras?`— Dados de origem (${tipo}) —\n${extras}`:''].filter(Boolean).join('\n\n');
+  await salvar(novaIdeia({titulo:String(o.titulo||o.title||o.tema||o.nome||o.pauta||'(sem título)'),nota,links:link?[String(link)]:[],pilar:o.pilar||'',origem:tipo==='outlier'?'outlier':'própria',origem_id:oid,tags:[tipo]}));
+  if(oid)existentes.add(oid);n++;}
+ return n;
+}
+
+// ================= TELA: CONFIGURAÇÕES =================
+async function telaConfig(){
+ const cfg=await DB.get('config','supabase')||{},email=await Sync.logado();
+ const est=await navigator.storage?.estimate?.().catch(()=>null);
+ $('#app').innerHTML=`<h3>Sincronização</h3><div class="card">
+ <div class="lbl">URL do projeto Supabase</div><input id="cfg-url" value="${esc(cfg.url||'')}" placeholder="https://xxxx.supabase.co" autocomplete="off">
+ <div class="lbl">Chave publishable (sb_publishable_…)</div><input id="cfg-key" value="${esc(cfg.key||'')}" autocomplete="off">
+ <div class="row" style="margin-top:8px"><button class="fix" data-a="salvarCfg">Salvar configuração</button></div>
+ <div class="lbl">Login</div>
+ ${email?`<p>Conectado como <b>${esc(email)}</b></p><div class="row"><button class="pri fix" data-a="syncAgora">Sincronizar agora</button><button class="fix" data-a="sair">Sair</button></div>`
+ :`<input id="cfg-email" type="email" placeholder="email" autocomplete="username"><input id="cfg-senha" type="password" placeholder="senha" autocomplete="current-password" style="margin-top:6px"><div class="row" style="margin-top:8px"><button class="pri fix" data-a="entrar">Entrar</button></div>`}
+ <p class="muted">A URL e a chave ficam só neste aparelho. Nunca use a chave secreta / service_role.</p></div>
+ <h3>Exportar</h3><div class="card"><div class="row"><button class="fix" data-a="expAgente" style="border-color:var(--c);color:var(--c)">JSON para IA (tudo, sem imagens)</button><button class="fix" data-a="backup" style="border-color:var(--c);color:var(--c)">Backup completo (com imagens)</button></div></div>
+ <h3>Importar</h3><div class="card"><textarea id="imp-txt" placeholder="Cole o JSON aqui ou deixe vazio para escolher um arquivo"></textarea>
+ <div class="row" style="margin-top:8px"><button class="fix" data-a="imp" data-v="backup">Backup completo</button><button class="fix" data-a="imp" data-v="outlier">Outlier (planilha)</button><button class="fix" data-a="imp" data-v="pauta">Pauta (plano de ação)</button></div></div>
+ <p class="muted">${est?`Uso neste aparelho: ${(est.usage/1048576).toFixed(1)} MB`:''}</p>`;
+ acoes.salvarCfg=async()=>{try{await Sync.configurar($('#cfg-url').value,$('#cfg-key').value);toast('Configuração salva');}catch(e){alert(e.message);}};
+ acoes.entrar=async()=>{try{await Sync.entrar($('#cfg-email').value.trim(),$('#cfg-senha').value);toast('Conectado');telaConfig();}catch(e){alert('Falha no login: '+e.message);}};
+ acoes.sair=async()=>{await Sync.sair();telaConfig();};
+ acoes.syncAgora=async()=>toast(await Sync.sincronizar()?'Sincronizado':'Falha na sincronização (veja o console)');
+ acoes.expAgente=async()=>{const l=(await itensAtivos()).sort((a,b)=>a.tipo.localeCompare(b.tipo));exportarAgente(l,`obra-ciencia-agente-${hoje()}.json`);};
+ acoes.backup=backupCompleto;
+ acoes.imp=el=>{const tipo=el.dataset.v,txt=$('#imp-txt').value.trim();
+  const processar=async texto=>{try{const j=JSON.parse(texto);const n=tipo==='backup'?await importarBackup(j):await importarExterno(j,tipo);toast(`${n} item(ns) importado(s)`);$('#imp-txt').value='';}catch(e){alert('Erro ao importar: '+e.message);}};
+  txt?processar(txt):escolherJSON(processar);};
+}
+
+// ================= INICIALIZAÇÃO =================
+window.addEventListener('sync:atualizado',()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;render();});
+window.addEventListener('hashchange',render);
+window.addEventListener('beforeunload',salvarPendentes);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')salvarPendentes();});
+$('#sync-status').addEventListener('click',()=>Sync.sincronizar());
+navigator.storage?.persist?.();
+render();
+Sync.iniciar();
+</script>
+</body>
+</html>
